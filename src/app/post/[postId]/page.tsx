@@ -42,12 +42,14 @@ const LoadMdx = async (postId: string, meta: PostMetaProps, toc: TocItem[]) => {
             .use(remarkFrontmatter, { type: "yaml", marker: "-" })
             .use(function () {
                 return function (tree: Parent) {
-                    // Process frontmatter and headings as before
-                    const tomlNode = tree.children.find(
-                        (node: Node) => node.type === "toml"
+                    // Look for YAML frontmatter and headings
+                    const yamlNode = tree.children.find(
+                        (node: Node) => node.type === "yaml"
                     ) as Node & { value: string };
-                    if (tomlNode) {
-                        const data = tomlNode.value;
+
+                    // Process YAML frontmatter
+                    if (yamlNode) {
+                        const data = yamlNode.value;
                         const titleMatch = data.match(/title:\s*(.*)/);
                         const dateMatch = data.match(/date:\s*(.*)/);
                         const descriptionMatch =
@@ -59,6 +61,7 @@ const LoadMdx = async (postId: string, meta: PostMetaProps, toc: TocItem[]) => {
                             meta.description = descriptionMatch[1].trim();
                     }
 
+                    // Generate TOC from headings
                     tree.children.forEach((node: Node) => {
                         if (node.type === "heading") {
                             const headingNode = node as Heading;

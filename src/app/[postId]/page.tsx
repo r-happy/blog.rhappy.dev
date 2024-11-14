@@ -16,6 +16,8 @@ import { TextLink } from "@/components/TextLink";
 import NotFound from "../not-found";
 import { GoChevronLeft } from "react-icons/go";
 import { Divider } from "@/components/Divider";
+import { Node, Parent } from "unist";
+import { Heading, Text } from "mdast";
 
 type PostMetaProps = {
     title: string;
@@ -30,19 +32,22 @@ type TocItem = {
 };
 
 const LoadMdx = async (postId: string, meta: PostMetaProps, toc: TocItem[]) => {
+    const filePath = path.join(process.cwd(), "posts", `${postId}.mdx`);
+    console.log("Attempting to load file from:", filePath);
+
     try {
         const file = await unified()
             .use(remarkParse)
             .use(remarkGfm)
             .use(remarkFrontmatter, { type: "yaml", marker: "-" })
             .use(function () {
-                return function (tree: any) {
+                return function (tree: Parent) {
+                    // Process frontmatter and headings as before
                     const tomlNode = tree.children.find(
-                        (node: { type: string }) => node.type === "toml"
-                    );
+                        (node: Node) => node.type === "toml"
+                    ) as Node & { value: string };
                     if (tomlNode) {
                         const data = tomlNode.value;
-
                         const titleMatch = data.match(/title:\s*(.*)/);
                         const dateMatch = data.match(/date:\s*(.*)/);
                         const descriptionMatch =
@@ -54,11 +59,13 @@ const LoadMdx = async (postId: string, meta: PostMetaProps, toc: TocItem[]) => {
                             meta.description = descriptionMatch[1].trim();
                     }
 
-                    tree.children.forEach((node: any) => {
+                    tree.children.forEach((node: Node) => {
                         if (node.type === "heading") {
-                            const textNode = node.children.find(
-                                (child: any) => child.type === "text"
-                            );
+                            const headingNode = node as Heading;
+                            const textNode = headingNode.children.find(
+                                (child: Node) => child.type === "text"
+                            ) as Text;
+
                             if (textNode) {
                                 const text = textNode.value;
                                 const id = text
@@ -67,7 +74,7 @@ const LoadMdx = async (postId: string, meta: PostMetaProps, toc: TocItem[]) => {
                                 toc.push({
                                     text,
                                     id,
-                                    depth: node.depth,
+                                    depth: headingNode.depth,
                                 });
                             }
                         }
@@ -77,14 +84,11 @@ const LoadMdx = async (postId: string, meta: PostMetaProps, toc: TocItem[]) => {
             .use(remarkRehype)
             .use(rehypeSlug)
             .use(rehypeStringify)
-            .process(
-                await read(path.join(process.cwd(), "posts", `${postId}.mdx`))
-            );
+            .process(await read(filePath));
 
         return String(file.value);
-    } catch (error: any) {
-        // Suppress the console error if it's a "file not found" error
-        if (error.code === "ENOENT") {
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
             console.log(`File not found for postId ${postId}.`);
             return null;
         } else {
@@ -93,7 +97,11 @@ const LoadMdx = async (postId: string, meta: PostMetaProps, toc: TocItem[]) => {
     }
 };
 
-export default async function Page({ params }: { params: { postId: string } }) {
+type PageProps = {
+    params: Promise<{ postId: string }>;
+};
+
+export default async function Page({ params }: PageProps) {
     const postMeta: PostMetaProps = { title: "", date: "", description: "" };
     const toc: TocItem[] = [];
     const { postId } = await params;

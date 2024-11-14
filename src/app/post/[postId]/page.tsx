@@ -13,7 +13,7 @@ import { PostTitle } from "@/components/PostTitle";
 import { PostDescription } from "@/components/PostDescription";
 import { PostDate } from "@/components/PostDate";
 import { TextLink } from "@/components/TextLink";
-import NotFound from "../not-found";
+import NotFound from "../../not-found";
 import { GoChevronLeft } from "react-icons/go";
 import { Divider } from "@/components/Divider";
 import { Node, Parent } from "unist";

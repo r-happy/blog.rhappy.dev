@@ -10,7 +10,7 @@ export default function ArticlesList() {
             <ul className="mt-4 space-y-4">
                 {posts.map((post) => (
                     <li key={post.id} className="bg-orange-100 p-4 rounded-lg">
-                        <Link href={`/${post.id}`}>
+                        <Link href={`/post/${post.id}`}>
                             <h2 className="text-xl font-semibold">
                                 {post.title}
                             </h2>

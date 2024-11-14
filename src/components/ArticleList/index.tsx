@@ -9,15 +9,15 @@ export default function ArticlesList() {
             <h1 className="text-2xl font-bold">記事一覧</h1>
             <ul className="mt-4 space-y-4">
                 {posts.map((post) => (
-                    <li key={post.id} className="bg-orange-100 p-4 rounded-lg">
-                        <Link href={`/post/${post.id}`}>
+                    <Link href={`/post/${post.id}`} key={post.id}>
+                        <li className="bg-orange-100 p-4 rounded-lg">
                             <h2 className="text-xl font-semibold">
                                 {post.title}
                             </h2>
-                            <p className="text-sm text-gray-600">{post.date}</p>
+                            <p className="text-sm text-gray-500">{post.date}</p>
                             <p className="mt-2">{post.description}</p>
-                        </Link>
-                    </li>
+                        </li>
+                    </Link>
                 ))}
             </ul>
         </div>
